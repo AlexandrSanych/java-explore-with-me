@@ -1,11 +1,6 @@
 package ru.practicum.stats.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,15 +21,15 @@ public class EndpointHit {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "app", nullable = false)
     private String app;
 
-    @Column(nullable = false)
+    @Column(name = "uri", nullable = false)
     private String uri;
 
-    @Column(nullable = false)
+    @Column(name = "ip", nullable = false)
     private String ip;
 
-    @Column(nullable = false)
+    @Column(name = "timestamp", nullable = false)
     private LocalDateTime timestamp;
 }
