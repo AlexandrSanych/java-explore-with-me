@@ -17,7 +17,6 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
 
     List<Request> findAllByEventId(Long eventId);
 
-
     List<Request> findAllByEventIdAndStatus(Long eventId, RequestStatus status);
 
     Long countByEventIdAndStatus(Long eventId, RequestStatus status);
@@ -27,4 +26,8 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
                                           @Param("requestIds") List<Long> requestIds);
 
     Optional<Request> findByIdAndRequesterId(Long requestId, Long userId);
+
+    @Query("SELECT e.id, COUNT(r) FROM Event e LEFT JOIN Request r ON r.event.id = e.id AND r.status = 'CONFIRMED' " +
+            "WHERE e.id IN :eventIds GROUP BY e.id")
+    List<Object[]> countConfirmedRequestsByEventIds(@Param("eventIds") List<Long> eventIds);
 }

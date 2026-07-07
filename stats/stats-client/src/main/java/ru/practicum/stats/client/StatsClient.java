@@ -2,7 +2,7 @@ package ru.practicum.stats.client;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -19,20 +19,16 @@ import java.util.List;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class StatsClient {
+
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
-    private final String serverUrl;
+
+    @Value("${stats-server.url:http://stats-server:9090}")
+    private String serverUrl;
+
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
-    public StatsClient(@Value("${stats-server.url:http://stats-server:9090}") String serverUrl) {
-        this.serverUrl = serverUrl;
-        this.restTemplate = new RestTemplate();
-
-        this.objectMapper = new ObjectMapper();
-        this.objectMapper.registerModule(new JavaTimeModule());
-        this.objectMapper.disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-    }
 
     public void saveHit(EndpointHitDto hitDto) {
         try {
@@ -89,10 +85,6 @@ public class StatsClient {
             builder.queryParam("unique", unique);
         }
 
-        return builder.toUriString();
-    }
-
-    public List<ViewStatsDto> getStatsForEvents(LocalDateTime start, LocalDateTime end, List<String> uris) {
-        return getStats(start, end, uris, true);
+        return builder.build(false).toUriString();
     }
 }

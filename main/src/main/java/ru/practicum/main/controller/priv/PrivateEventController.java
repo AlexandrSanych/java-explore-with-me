@@ -10,6 +10,7 @@ import ru.practicum.main.dto.request.UpdateEventUserRequest;
 import ru.practicum.main.dto.response.EventFullDto;
 import ru.practicum.main.dto.response.EventShortDto;
 import ru.practicum.main.service.EventService;
+import ru.practicum.main.validator.PaginationValidator;
 
 import java.util.List;
 
@@ -24,6 +25,7 @@ public class PrivateEventController {
     public List<EventShortDto> getUserEvents(@PathVariable Long userId,
                                              @RequestParam(defaultValue = "0") Integer from,
                                              @RequestParam(defaultValue = "10") Integer size) {
+        PaginationValidator.validate(from, size);
         log.info("Запрос на получение событий пользователя {} с параметрами: from={}, size={}", userId, from, size);
         return eventService.getUserEvents(userId, from, size);
     }

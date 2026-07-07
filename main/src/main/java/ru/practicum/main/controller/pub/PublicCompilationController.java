@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.main.dto.response.CompilationResponse;
 import ru.practicum.main.service.CompilationService;
+import ru.practicum.main.validator.PaginationValidator;
 
 import java.util.List;
 
@@ -19,6 +20,7 @@ public class PublicCompilationController {
     public List<CompilationResponse> getCompilations(@RequestParam(required = false) Boolean pinned,
                                                      @RequestParam(defaultValue = "0") Integer from,
                                                      @RequestParam(defaultValue = "10") Integer size) {
+        PaginationValidator.validate(from, size);
         log.info("Запрос на получение подборок с параметрами: pinned={}, from={}, size={}", pinned, from, size);
         return compilationService.getCompilations(pinned, from, size);
     }

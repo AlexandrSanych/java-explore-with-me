@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.main.dto.request.UpdateEventAdminRequest;
 import ru.practicum.main.dto.response.EventFullDto;
 import ru.practicum.main.service.EventService;
+import ru.practicum.main.validator.PaginationValidator;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,6 +29,9 @@ public class AdminEventController {
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
             @RequestParam(defaultValue = "0") Integer from,
             @RequestParam(defaultValue = "10") Integer size) {
+
+        PaginationValidator.validate(from, size);
+
         log.info("Запрос на получение событий с параметрами: users={}, states={}, categories={}, rangeStart={}," +
                         " rangeEnd={}, from={}, size={}",
                 users, states, categories, rangeStart, rangeEnd, from, size);

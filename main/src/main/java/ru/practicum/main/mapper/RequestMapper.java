@@ -5,7 +5,6 @@ import ru.practicum.main.model.Request;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class RequestMapper {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
@@ -23,6 +22,6 @@ public class RequestMapper {
     public static List<ParticipationRequestDto> toParticipationRequestDtoList(List<Request> requests) {
         return requests.stream()
                 .map(RequestMapper::toParticipationRequestDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 }

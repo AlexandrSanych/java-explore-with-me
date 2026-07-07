@@ -58,6 +58,13 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/ewm-stats
       SPRING_DATASOURCE_USERNAME: ewm_user
       SPRING_DATASOURCE_PASSWORD: ewm_password
+      JAVA_OPTS: -Xmx256m -XX:+UseContainerSupport
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9090/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     networks:
       - ewm-network
 
@@ -73,7 +80,7 @@ services:
       ewm-db:
         condition: service_healthy
       stats-server:
-        condition: service_started
+        condition: service_healthy
     environment:
       SERVER_PORT: 8080
       SPRING_PROFILES_ACTIVE: docker
@@ -81,6 +88,13 @@ services:
       SPRING_DATASOURCE_USERNAME: ewm_user
       SPRING_DATASOURCE_PASSWORD: ewm_password
       STATS_SERVER_URL: http://stats-server:9090
+      JAVA_OPTS: -Xmx512m -XX:+UseContainerSupport -XX:+UseG1GC
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 90s
     networks:
       - ewm-network
 

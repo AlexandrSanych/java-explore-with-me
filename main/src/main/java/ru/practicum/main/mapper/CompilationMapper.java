@@ -8,7 +8,6 @@ import ru.practicum.main.model.Event;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class CompilationMapper {
 
@@ -32,7 +31,7 @@ public class CompilationMapper {
                                 event,
                                 viewsMap.getOrDefault("/events/" + event.getId(), 0L),
                                 confirmedMap.getOrDefault(event.getId(), 0L)))
-                        .collect(Collectors.toList()))
+                        .toList())
                 .build();
     }
 

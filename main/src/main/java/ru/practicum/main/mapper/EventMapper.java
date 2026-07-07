@@ -11,7 +11,6 @@ import ru.practicum.main.model.User;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class EventMapper {
     public static Event toEvent(NewEventRequest request, User initiator, Category category) {
@@ -70,13 +69,11 @@ public class EventMapper {
                                                           Map<Long, Long> viewsMap,
                                                           Map<Long, Long> confirmedMap) {
         if (events == null) return List.of();
-
         return events.stream()
                 .map(event -> toEventShortDto(
                         event,
                         viewsMap != null ? viewsMap.getOrDefault(event.getId(), 0L) : 0L,
-                        confirmedMap != null ? confirmedMap.getOrDefault(event.getId(),
-                                0L) : 0L))
-                .collect(Collectors.toList());
+                        confirmedMap != null ? confirmedMap.getOrDefault(event.getId(), 0L) : 0L))
+                .toList();
     }
 }

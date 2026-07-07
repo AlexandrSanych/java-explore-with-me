@@ -3,6 +3,7 @@ package ru.practicum.main.service.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.main.dto.request.NewUserRequest;
@@ -13,9 +14,9 @@ import ru.practicum.main.mapper.UserMapper;
 import ru.practicum.main.model.User;
 import ru.practicum.main.repository.UserRepository;
 import ru.practicum.main.service.UserService;
+import ru.practicum.main.validator.PaginationValidator;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -47,17 +48,21 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public List<UserResponse> getUsers(List<Long> ids, Integer from, Integer size) {
+        PaginationValidator.validate(from, size);
+
+        Pageable pageable = PageRequest.of(from / size, size);
+
         if (ids != null && !ids.isEmpty()) {
-            return userRepository.findAllByIdIn(ids)
+            return userRepository.findAllByIdIn(ids, pageable)
                     .stream()
                     .map(UserMapper::toUserResponse)
-                    .collect(Collectors.toList());
+                    .toList();
         }
 
-        return userRepository.findAll(PageRequest.of(from / size, size))
+        return userRepository.findAll(pageable)
                 .stream()
                 .map(UserMapper::toUserResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private User getUserOrThrow(Long userId) {

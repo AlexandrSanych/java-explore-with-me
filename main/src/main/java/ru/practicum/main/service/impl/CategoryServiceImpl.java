@@ -3,6 +3,8 @@ package ru.practicum.main.service.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.main.dto.request.NewCategoryRequest;
@@ -16,7 +18,6 @@ import ru.practicum.main.repository.EventRepository;
 import ru.practicum.main.service.CategoryService;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -70,10 +71,12 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional(readOnly = true)
     public List<CategoryResponse> getCategories(Integer from, Integer size) {
-        return categoryRepository.findAll(PageRequest.of(from / size, size))
+        Pageable pageable = PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "id"));
+
+        return categoryRepository.findAll(pageable)
                 .stream()
                 .map(CategoryMapper::toCategoryResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override

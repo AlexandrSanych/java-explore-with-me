@@ -8,7 +8,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import ru.practicum.main.client.StatsClient;
+import ru.practicum.stats.client.StatsClient;
 import ru.practicum.main.dto.request.NewCompilationRequest;
 import ru.practicum.main.dto.request.UpdateCompilationRequest;
 import ru.practicum.main.dto.response.CompilationResponse;
@@ -21,7 +21,6 @@ import ru.practicum.main.model.User;
 import ru.practicum.main.repository.CompilationRepository;
 import ru.practicum.main.repository.EventRepository;
 import ru.practicum.main.repository.RequestRepository;
-import ru.practicum.stats.dto.ViewStatsDto;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -50,7 +49,6 @@ class CompilationServiceTest {
     @InjectMocks
     private CompilationServiceImpl compilationService;
 
-    // Вспомогательный метод для создания события с категорией
     private Event createEvent(Long id, String title) {
         Category category = Category.builder()
                 .id(1L)
@@ -214,8 +212,8 @@ class CompilationServiceTest {
                 .pinned(true)
                 .events(List.of())
                 .build();
-
-        when(compilationRepository.findAllByPinned(true)).thenReturn(List.of(compilation));
+        when(compilationRepository.findAllByPinned(eq(true), any(Pageable.class)))
+                .thenReturn(List.of(compilation));
 
         List<CompilationResponse> result = compilationService.getCompilations(true, 0, 10);
 
@@ -231,8 +229,8 @@ class CompilationServiceTest {
                 .pinned(false)
                 .events(List.of())
                 .build();
-
-        when(compilationRepository.findAllByPinned(false)).thenReturn(List.of(compilation));
+        when(compilationRepository.findAllByPinned(eq(false), any(Pageable.class)))
+                .thenReturn(List.of(compilation));
 
         List<CompilationResponse> result = compilationService.getCompilations(false, 0, 10);
 
@@ -357,5 +355,23 @@ class CompilationServiceTest {
 
         assertThat(response).isNotNull();
         verify(eventRepository, times(1)).findAllById(List.of(5L, 6L));
+    }
+
+    @Test
+    void addCompilation_shouldThrowNotFoundException_whenSomeEventsNotFound() {
+        NewCompilationRequest request = NewCompilationRequest.builder()
+                .title("Test Compilation")
+                .events(List.of(1L, 999L))
+                .build();
+
+        Event event1 = createEvent(1L, "Event 1");
+        when(compilationRepository.existsByTitle("Test Compilation")).thenReturn(false);
+        when(eventRepository.findAllById(List.of(1L, 999L))).thenReturn(List.of(event1));
+
+        assertThatThrownBy(() -> compilationService.addCompilation(request))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessageContaining("События с id [999] не найдены");
+
+        verify(compilationRepository, never()).save(any(Compilation.class));
     }
 }

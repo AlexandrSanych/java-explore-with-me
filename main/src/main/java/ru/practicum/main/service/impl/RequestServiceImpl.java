@@ -25,7 +25,6 @@ import ru.practicum.main.service.RequestService;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -41,35 +40,29 @@ public class RequestServiceImpl implements RequestService {
         User requester = getUserOrThrow(userId);
         Event event = getEventOrThrow(eventId);
 
-        // Проверка: нельзя участвовать в своем событии
         if (event.getInitiator().getId().equals(userId)) {
             throw new ConflictException("Инициатор события не может добавить запрос на участие в своем событии");
         }
 
-        // Проверка: событие должно быть опубликовано
         if (event.getState() != EventState.PUBLISHED) {
             throw new ConflictException("Нельзя участвовать в неопубликованном событии");
         }
 
-        // Проверка: повторный запрос
         if (requestRepository.existsByEventIdAndRequesterId(eventId, userId)) {
             throw new ConflictException("Запрос на участие уже существует");
         }
 
-        // Проверка: лимит участников
         Long confirmedRequests = requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
         if (event.getParticipantLimit() > 0 && confirmedRequests >= event.getParticipantLimit()) {
             throw new ConflictException("Достигнут лимит запросов на участие");
         }
 
-        // Создание запроса
         Request request = Request.builder()
                 .event(event)
                 .requester(requester)
                 .created(LocalDateTime.now())
                 .build();
 
-        // Определение статуса запроса
         if (!event.getRequestModeration() || event.getParticipantLimit() == 0) {
             request.setStatus(RequestStatus.CONFIRMED);
         } else {
@@ -94,8 +87,8 @@ public class RequestServiceImpl implements RequestService {
     public ParticipationRequestDto cancelRequest(Long userId, Long requestId) {
         getUserOrThrow(userId);
         Request request = requestRepository.findByIdAndRequesterId(requestId, userId)
-                .orElseThrow(() -> new NotFoundException("Запрос с id " + requestId + " не найден у пользователя "
-                        + userId));
+                .orElseThrow(() -> new NotFoundException("Запрос с id " + requestId +
+                        " не найден у пользователя " + userId));
 
         request.setStatus(RequestStatus.CANCELED);
         Request updatedRequest = requestRepository.save(request);
@@ -109,7 +102,6 @@ public class RequestServiceImpl implements RequestService {
         getUserOrThrow(userId);
         Event event = getEventOrThrow(eventId);
 
-        // Проверка: пользователь - инициатор события
         if (!event.getInitiator().getId().equals(userId)) {
             throw new ForbiddenException("Пользователь не является инициатором события");
         }
@@ -125,23 +117,17 @@ public class RequestServiceImpl implements RequestService {
         getUserOrThrow(userId);
         Event event = getEventOrThrow(eventId);
 
-        // Проверка: пользователь - инициатор события
         if (!event.getInitiator().getId().equals(userId)) {
             throw new ForbiddenException("Пользователь не является инициатором события");
         }
 
-        // ИСПРАВЛЕНО: Убрана проверка статуса события
-        // Спецификация требует проверять только статус заявок, а не события
-
         List<Long> requestIds = request.getRequestIds();
         List<Request> requests = requestRepository.findAllByEventIdAndIdIn(eventId, requestIds);
 
-        // Проверка: все запросы существуют
         if (requests.size() != requestIds.size()) {
             throw new NotFoundException("Некоторые запросы не найдены");
         }
 
-        // Проверка: все запросы в статусе PENDING (соответствует спецификации)
         for (Request req : requests) {
             if (req.getStatus() != RequestStatus.PENDING) {
                 throw new ConflictException("Статус можно изменить только у заявок в состоянии ожидания");
@@ -152,7 +138,6 @@ public class RequestServiceImpl implements RequestService {
         EventRequestStatusUpdateResult result = new EventRequestStatusUpdateResult();
 
         if ("CONFIRMED".equals(request.getStatus())) {
-            // Проверка лимита
             if (event.getParticipantLimit() > 0 && confirmedRequests >= event.getParticipantLimit()) {
                 throw new ConflictException("Достигнут лимит запросов на участие");
             }
@@ -171,13 +156,12 @@ public class RequestServiceImpl implements RequestService {
                 }
             }
 
-            // Оптимизировано: загружаем только PENDING запросы
             if (event.getParticipantLimit() > 0 && confirmedRequests >= event.getParticipantLimit()) {
                 List<Request> pendingRequests = requestRepository.findAllByEventIdAndStatus(eventId,
                                 RequestStatus.PENDING)
                         .stream()
                         .filter(r -> !requestIds.contains(r.getId()))
-                        .collect(Collectors.toList());
+                        .toList();
 
                 for (Request req : pendingRequests) {
                     req.setStatus(RequestStatus.REJECTED);
@@ -208,8 +192,6 @@ public class RequestServiceImpl implements RequestService {
         log.info("Изменен статус заявок для события {}: {}", eventId, request.getStatus());
         return result;
     }
-
-    // ============= ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ =============
 
     private User getUserOrThrow(Long userId) {
         return userRepository.findById(userId)

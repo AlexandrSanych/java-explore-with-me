@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.main.dto.request.NewUserRequest;
 import ru.practicum.main.dto.response.UserResponse;
 import ru.practicum.main.service.UserService;
+import ru.practicum.main.validator.PaginationValidator;
 
 import java.util.List;
 
@@ -36,6 +37,7 @@ public class AdminUserController {
     public List<UserResponse> getUsers(@RequestParam(required = false) List<Long> ids,
                                        @RequestParam(defaultValue = "0") Integer from,
                                        @RequestParam(defaultValue = "10") Integer size) {
+        PaginationValidator.validate(from, size);
         log.info("Запрос на получение пользователей с параметрами: ids={}, from={}, size={}", ids, from, size);
         return userService.getUsers(ids, from, size);
     }
