@@ -11,6 +11,7 @@ import ru.practicum.stats.model.EndpointHit;
 import ru.practicum.stats.repository.StatsRepository;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -36,10 +37,18 @@ public class StatsServiceImpl implements StatsService {
     @Override
     @Transactional(readOnly = true)
     public List<ViewStatsDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
+        // 1. Проверка, что дата начала не позже даты окончания
         if (start.isAfter(end)) {
             throw new BadRequestException("Дата начала не может быть позже даты окончания");
         }
 
+        // 2. Проверка на пустой список uris - возвращаем пустой результат
+        if (uris != null && uris.isEmpty()) {
+            log.info("Передан пустой список uris, возвращаем пустую статистику");
+            return Collections.emptyList();
+        }
+
+        // 3. Получение статистики в зависимости от параметра unique
         List<ViewStatsDto> stats;
         if (Boolean.TRUE.equals(unique)) {
             stats = statsRepository.getStatsWithoutDuplicates(start, end, uris);

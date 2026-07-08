@@ -1,21 +1,47 @@
+version: '3.8'
+
 services:
-  stats-db:
+  # PostgreSQL для основного сервиса
+  ewm-db:
     image: postgres:16.1
-    container_name: stats-db
-    environment:
-      - POSTGRES_DB=explore-with-me-stats
-      - POSTGRES_USER=stats_user
-      - POSTGRES_PASSWORD=stats_password
+    container_name: ewm-db
     ports:
       - "5432:5432"
+    environment:
+      POSTGRES_DB: ewm-main
+      POSTGRES_USER: ewm_user
+      POSTGRES_PASSWORD: ewm_password
+    volumes:
+      - ewm-main-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U stats_user -d explore-with-me-stats"]
+      test: ["CMD-SHELL", "pg_isready -U ewm_user -d ewm-main"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
       - ewm-network
 
+  # PostgreSQL для сервиса статистики
+  stats-db:
+    image: postgres:16.1
+    container_name: stats-db
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: ewm-stats
+      POSTGRES_USER: ewm_user
+      POSTGRES_PASSWORD: ewm_password
+    volumes:
+      - ewm-stats-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ewm_user -d ewm-stats"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ewm-network
+
+  # Сервис статистики
   stats-server:
     build:
       context: ./stats/stats-server
@@ -27,29 +53,22 @@ services:
       stats-db:
         condition: service_healthy
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/explore-with-me-stats
-      - SPRING_DATASOURCE_USERNAME=stats_user
-      - SPRING_DATASOURCE_PASSWORD=stats_password
-    networks:
-      - ewm-network
-
-  ewm-db:
-    image: postgres:16.1
-    container_name: ewm-db
-    environment:
-      - POSTGRES_DB=explore-with-me-main
-      - POSTGRES_USER=ewm_user
-      - POSTGRES_PASSWORD=ewm_password
-    ports:
-      - "5433:5432"
+      SERVER_PORT: 9090
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/ewm-stats
+      SPRING_DATASOURCE_USERNAME: ewm_user
+      SPRING_DATASOURCE_PASSWORD: ewm_password
+      JAVA_OPTS: -Xmx256m -XX:+UseContainerSupport
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ewm_user -d explore-with-me-main"]
+      test: ["CMD", "curl", "-f", "http://localhost:9090/actuator/health"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
     networks:
       - ewm-network
 
+  # Основной сервис
   ewm-service:
     build:
       context: ./main
@@ -61,14 +80,27 @@ services:
       ewm-db:
         condition: service_healthy
       stats-server:
-        condition: service_started
+        condition: service_healthy
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/explore-with-me-main
-      - SPRING_DATASOURCE_USERNAME=ewm_user
-      - SPRING_DATASOURCE_PASSWORD=ewm_password
-      - STATS_SERVER_URL=http://stats-server:9090
+      SERVER_PORT: 8080
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/ewm-main
+      SPRING_DATASOURCE_USERNAME: ewm_user
+      SPRING_DATASOURCE_PASSWORD: ewm_password
+      STATS_SERVER_URL: http://stats-server:9090
+      JAVA_OPTS: -Xmx512m -XX:+UseContainerSupport -XX:+UseG1GC
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 90s
     networks:
       - ewm-network
+
+volumes:
+  ewm-main-data:
+  ewm-stats-data:
 
 networks:
   ewm-network:
