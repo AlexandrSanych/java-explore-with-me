@@ -20,4 +20,9 @@ public interface EventValidationService {
     EventState applyUserStateAction(Event event, String stateAction);
 
     EventState applyAdminStateAction(Event event, String stateAction);
+
+    // ========== МЕТОДЫ ДЛЯ МОДЕРАЦИИ ==========
+    EventState applyAdminStateAction(Event event, String stateAction, String comment);
+
+    EventState applyUserStateActionWithRework(Event event, String stateAction);
 }

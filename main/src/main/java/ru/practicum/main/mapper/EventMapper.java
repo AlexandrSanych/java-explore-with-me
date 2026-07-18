@@ -48,6 +48,8 @@ public class EventMapper {
                 .state(event.getState() != null ? event.getState().name() : null)
                 .title(event.getTitle())
                 .views(views != null ? views : 0L)
+                .moderationComment(event.getModerationComment())
+                .reworkCount(event.getReworkCount() != null ? event.getReworkCount() : 0)
                 .build();
     }
 

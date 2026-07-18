@@ -17,9 +17,12 @@ import ru.practicum.main.mapper.EventUpdateMapper;
 import ru.practicum.main.model.Category;
 import ru.practicum.main.model.Event;
 import ru.practicum.main.model.EventState;
+import ru.practicum.main.model.ModerationAction;
+import ru.practicum.main.model.ModerationLog;
 import ru.practicum.main.model.User;
 import ru.practicum.main.repository.CategoryRepository;
 import ru.practicum.main.repository.EventRepository;
+import ru.practicum.main.repository.ModerationLogRepository;
 import ru.practicum.main.repository.UserRepository;
 import ru.practicum.main.service.EventRequestCountService;
 import ru.practicum.main.service.EventService;
@@ -41,11 +44,14 @@ public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
+    private final ModerationLogRepository moderationLogRepository;
 
     private final EventStatsService eventStatsService;
     private final EventRequestCountService eventRequestCountService;
     private final EventValidationService eventValidationService;
     private final PublicEventSearchService publicEventSearchService;
+
+    private static final Long ADMIN_ID = 1L;
 
     // ===================== ПРИВАТНЫЕ МЕТОДЫ =====================
 
@@ -72,6 +78,15 @@ public class EventServiceImpl implements EventService {
         Event event = EventMapper.toEvent(request, user, category);
         Event savedEvent = eventRepository.save(event);
 
+        User moderator = getUserOrThrow(ADMIN_ID);
+        ModerationLog moderationLog = new ModerationLog();
+        moderationLog.setEvent(event);
+        moderationLog.setModerator(moderator);
+        moderationLog.setAction(ModerationAction.SENT_TO_REVIEW);
+        moderationLog.setComment("Событие создано и отправлено на модерацию");
+        moderationLog.setCreatedOn(LocalDateTime.now());
+        moderationLogRepository.save(moderationLog);
+
         log.info("Добавлено новое событие: {}", savedEvent);
         return enrichEventWithViewsAndRequests(savedEvent);
     }
@@ -91,7 +106,7 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional
     public EventFullDto updateEventByUser(Long userId, Long eventId, UpdateEventUserRequest request) {
-        getUserOrThrow(userId);
+        User user = getUserOrThrow(userId);
         Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException("Событие с id " + eventId +
                         " не найдено у пользователя " + userId));
@@ -103,7 +118,9 @@ public class EventServiceImpl implements EventService {
         Category category = request.getCategory() != null ? getCategoryOrThrow(request.getCategory()) : null;
         EventUpdateMapper.updateEventFromUserRequest(event, request, category);
 
-        EventState newState = eventValidationService.applyUserStateAction(event, request.getStateAction());
+        EventState oldState = event.getState();
+
+        EventState newState = eventValidationService.applyUserStateActionWithRework(event, request.getStateAction());
         event.setState(newState);
 
         if (event.getState() == EventState.PENDING) {
@@ -111,6 +128,20 @@ public class EventServiceImpl implements EventService {
         }
 
         Event updatedEvent = eventRepository.save(event);
+
+        // Если событие было отправлено на модерацию (SEND_TO_REVIEW) и оно было на доработке
+        if ("SEND_TO_REVIEW".equals(request.getStateAction()) && oldState == EventState.CANCELED) {
+            User moderator = getUserOrThrow(ADMIN_ID);
+            ModerationLog moderationLog = new ModerationLog();
+            moderationLog.setEvent(event);
+            moderationLog.setModerator(moderator);
+            moderationLog.setAction(ModerationAction.RESUBMITTED);
+            moderationLog.setComment("Повторно отправлено на модерацию после доработки");
+            moderationLog.setCreatedOn(LocalDateTime.now());
+            moderationLogRepository.save(moderationLog);
+            log.info("Создан лог повторной отправки на модерацию для события {}", eventId);
+        }
+
         log.info("Обновлено событие пользователем {}: {}", userId, updatedEvent);
 
         return enrichEventWithViewsAndRequests(updatedEvent);
@@ -184,11 +215,16 @@ public class EventServiceImpl implements EventService {
         Category category = request.getCategory() != null ? getCategoryOrThrow(request.getCategory()) : null;
         EventUpdateMapper.updateEventFromAdminRequest(event, request, category);
 
-        EventState newState = eventValidationService.applyAdminStateAction(event, request.getStateAction());
+        EventState newState = eventValidationService.applyAdminStateAction(
+                event,
+                request.getStateAction(),
+                request.getModerationComment()
+        );
         event.setState(newState);
 
         if (event.getState() == EventState.PUBLISHED) {
             event.setPublishedOn(LocalDateTime.now());
+            event.setModerationComment(null);
         }
 
         Event updatedEvent = eventRepository.save(event);

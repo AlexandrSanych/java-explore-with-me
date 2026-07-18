@@ -40,4 +40,8 @@ public class UpdateEventAdminRequest {
 
     @Size(min = 3, max = 120, message = "Длина заголовка должна быть от 3 до 120 символов")
     private String title;
+
+    // ========== ПОЛЕ ДЛЯ МОДЕРАЦИИ ==========
+    @Size(max = 1000, message = "Комментарий модерации не должен превышать 1000 символов")
+    private String moderationComment;
 }

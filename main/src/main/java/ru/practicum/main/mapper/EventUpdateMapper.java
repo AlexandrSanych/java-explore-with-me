@@ -65,5 +65,8 @@ public class EventUpdateMapper {
         if (request.getTitle() != null) {
             event.setTitle(request.getTitle());
         }
+        if (request.getModerationComment() != null) {
+            event.setModerationComment(request.getModerationComment());
+        }
     }
 }
