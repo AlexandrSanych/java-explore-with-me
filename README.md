@@ -7,7 +7,7 @@
 - отправка на доработку с комментарием, история модерации.
 
 ### Ссылка на PR
-[feature-moderation_enhancement](https://github.com/ALEXANDRSANYCH/java-explore-with-me/pull/1)
+[feature-moderation_enhancement](https://github.com/AlexandrSanych/java-explore-with-me/pull/5)
 
 ### Технологии
 - Java 21, Spring Boot 3.3.2, PostgreSQL, Docker, Maven
