@@ -129,7 +129,6 @@ public class EventServiceImpl implements EventService {
 
         Event updatedEvent = eventRepository.save(event);
 
-        // Если событие было отправлено на модерацию (SEND_TO_REVIEW) и оно было на доработке
         if ("SEND_TO_REVIEW".equals(request.getStateAction()) && oldState == EventState.CANCELED) {
             User moderator = getUserOrThrow(ADMIN_ID);
             ModerationLog moderationLog = new ModerationLog();

@@ -1,10 +1,13 @@
 package ru.practicum.main.mapper;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import ru.practicum.main.dto.request.UpdateEventAdminRequest;
 import ru.practicum.main.dto.request.UpdateEventUserRequest;
 import ru.practicum.main.model.Category;
 import ru.practicum.main.model.Event;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class EventUpdateMapper {
 
     public static void updateEventFromUserRequest(Event event, UpdateEventUserRequest request, Category category) {

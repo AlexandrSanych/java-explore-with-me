@@ -1,9 +1,13 @@
 package ru.practicum.main.mapper;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import ru.practicum.main.dto.response.LocationDto;
 import ru.practicum.main.model.Location;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class LocationMapper {
+
     public static Location toLocation(LocationDto dto) {
         if (dto == null) {
             return null;

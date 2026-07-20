@@ -1,11 +1,14 @@
 package ru.practicum.main.mapper;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import ru.practicum.main.dto.response.ModerationLogResponse;
 import ru.practicum.main.model.ModerationLog;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ModerationLogMapper {
 
     public static ModerationLogResponse toModerationLogResponse(ModerationLog log) {

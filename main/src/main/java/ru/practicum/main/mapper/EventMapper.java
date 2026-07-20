@@ -1,5 +1,7 @@
 package ru.practicum.main.mapper;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import ru.practicum.main.dto.request.NewEventRequest;
 import ru.practicum.main.dto.response.EventFullDto;
 import ru.practicum.main.dto.response.EventShortDto;
@@ -12,7 +14,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class EventMapper {
+
     public static Event toEvent(NewEventRequest request, User initiator, Category category) {
         return Event.builder()
                 .annotation(request.getAnnotation())

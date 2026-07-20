@@ -31,6 +31,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class EventModerationServiceImpl implements EventModerationService {
+
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final ModerationLogRepository moderationLogRepository;
@@ -49,7 +50,6 @@ public class EventModerationServiceImpl implements EventModerationService {
         ModerationAction action = parseAction(request.getAction());
         String comment = request.getComment();
 
-        // Применяем действие через валидатор
         EventState newState = validationService.applyAdminStateAction(event, request.getAction(), comment);
         event.setState(newState);
 
@@ -58,22 +58,18 @@ public class EventModerationServiceImpl implements EventModerationService {
             event.setModerationComment(null);
         }
 
-        // Сохраняем событие
         Event savedEvent = eventRepository.save(event);
 
-        // Сохраняем лог модерации
         ModerationLog moderationLog = new ModerationLog();
         moderationLog.setEvent(event);
         moderationLog.setModerator(moderator);
         moderationLog.setAction(action);
         moderationLog.setComment(comment);
         moderationLog.setCreatedOn(LocalDateTime.now());
-
         moderationLogRepository.save(moderationLog);
 
         log.info("Событие {} промодерировано: {}, администратор: {}", eventId, action, ADMIN_ID);
 
-        // Обогащаем статистикой
         Long views = statsService.getViewsForEvent(eventId);
         Long confirmedRequests = requestCountService.getConfirmedRequestsCount(eventId);
         return EventMapper.toEventFullDto(savedEvent, views, confirmedRequests);
