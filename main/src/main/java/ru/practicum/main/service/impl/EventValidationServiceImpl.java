@@ -22,7 +22,6 @@ public class EventValidationServiceImpl implements EventValidationService {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime minDate = now.plusHours(2);
         if (eventDate.isBefore(minDate)) {
-            // Оставляем 400 согласно тестам Postman
             throw new BadRequestException("Дата события должна быть не ранее чем через 2 часа от текущего момента");
         }
     }
@@ -34,7 +33,6 @@ public class EventValidationServiceImpl implements EventValidationService {
         }
         LocalDateTime now = LocalDateTime.now();
         if (eventDate.isBefore(now.plusHours(2))) {
-            // Оставляем 400 согласно тестам Postman
             throw new BadRequestException("Дата события должна быть не ранее чем через 2 часа от текущего момента");
         }
     }
@@ -46,7 +44,6 @@ public class EventValidationServiceImpl implements EventValidationService {
         }
         LocalDateTime now = LocalDateTime.now();
         if (eventDate.isBefore(now.plusHours(1))) {
-            // Оставляем 400 согласно тестам Postman
             throw new BadRequestException("Дата события должна быть не ранее чем через час от текущего момента");
         }
     }
@@ -108,6 +105,76 @@ public class EventValidationServiceImpl implements EventValidationService {
             case "REJECT_EVENT":
                 if (event.getState() == EventState.PUBLISHED) {
                     throw new ConflictException("Нельзя отклонить опубликованное событие");
+                }
+                return EventState.CANCELED;
+            default:
+                throw new BadRequestException("Некорректное действие: " + stateAction);
+        }
+    }
+
+    @Override
+    public EventState applyAdminStateAction(Event event, String stateAction, String comment) {
+        if (stateAction == null) {
+            return event.getState();
+        }
+
+        switch (stateAction) {
+            case "PUBLISH_EVENT":
+                if (event.getState() != EventState.PENDING) {
+                    throw new ConflictException("Событие можно опубликовать только из статуса PENDING");
+                }
+                if (event.getEventDate().isBefore(LocalDateTime.now().plusHours(1))) {
+                    throw new ConflictException("Дата события должна быть не ранее чем через час от текущего момента");
+                }
+                event.setModerationComment(null);
+                return EventState.PUBLISHED;
+
+            case "REJECT_EVENT":
+                if (event.getState() == EventState.PUBLISHED) {
+                    throw new ConflictException("Нельзя отклонить опубликованное событие");
+                }
+                if (comment != null && !comment.isEmpty()) {
+                    event.setModerationComment(comment);
+                }
+                return EventState.CANCELED;
+
+            case "SEND_TO_REWORK":
+                if (event.getState() != EventState.PENDING) {
+                    throw new ConflictException("Событие можно отправить на доработку только из статуса PENDING");
+                }
+                if (comment == null || comment.isEmpty()) {
+                    throw new BadRequestException("Необходимо указать комментарий для доработки");
+                }
+                event.setModerationComment(comment);
+                Integer currentReworkCount = event.getReworkCount();
+                if (currentReworkCount == null) {
+                    currentReworkCount = 0;
+                }
+                event.setReworkCount(currentReworkCount + 1);
+                return EventState.CANCELED;
+
+            default:
+                throw new BadRequestException("Некорректное действие: " + stateAction);
+        }
+    }
+
+    @Override
+    public EventState applyUserStateActionWithRework(Event event, String stateAction) {
+        if (stateAction == null) {
+            return event.getState();
+        }
+
+        switch (stateAction) {
+            case "SEND_TO_REVIEW":
+                if (event.getState() != EventState.CANCELED && event.getState() != EventState.PENDING) {
+                    throw new ConflictException("Событие можно отправить на модерацию " +
+                            "только из статуса CANCELED или PENDING");
+                }
+                event.setModerationComment(null);
+                return EventState.PENDING;
+            case "CANCEL_REVIEW":
+                if (event.getState() != EventState.PENDING) {
+                    throw new ConflictException("Событие можно отменить только из статуса PENDING");
                 }
                 return EventState.CANCELED;
             default:

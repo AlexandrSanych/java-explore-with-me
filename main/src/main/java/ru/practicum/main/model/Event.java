@@ -64,6 +64,16 @@ public class Event {
     @Column(name = "published_on")
     private LocalDateTime publishedOn;
 
+    // ========== ПОЛЯ ДЛЯ МОДЕРАЦИИ ==========
+    @Column(name = "moderation_comment", length = 1000)
+    private String moderationComment;
+
+    @Column(name = "rework_count")
+    private Integer reworkCount = 0;
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<ModerationLog> moderationLogs;
+
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL)
     private List<Request> requests;
 

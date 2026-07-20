@@ -34,4 +34,8 @@ public class EventFullDto {
     private String state;
     private String title;
     private Long views;
+
+    // ========== ПОЛЯ ДЛЯ МОДЕРАЦИИ ==========
+    private String moderationComment;
+    private Integer reworkCount;
 }

@@ -1,0 +1,938 @@
+{
+  "info": {
+    "_postman_id": "1f53cea3-b884-4d79-b131-9f5102bc5a57",
+    "name": "Explore With Me - Moderation Enhancement",
+    "description": "Тестирование дополнительной функциональности moderation_enhancement",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "43787875"
+  },
+  "item": [
+    {
+      "name": "1. Подготовка данных",
+      "item": [
+        {
+          "name": "1.1 Создать пользователя (админ)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Статус 201 Created', function() {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Проверка тела ответа', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('email');",
+                  "    pm.expect(jsonData).to.have.property('name');",
+                  "    pm.expect(jsonData.name).to.eql('Admin User');",
+                  "    pm.environment.set('adminId', jsonData.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"admin@example.com\",\n    \"name\": \"Admin User\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/admin/users",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "1.2 Создать пользователя (инициатор события)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Статус 201 Created', function() {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Проверка тела ответа', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('email');",
+                  "    pm.expect(jsonData).to.have.property('name');",
+                  "    pm.expect(jsonData.name).to.eql('Event Initiator');",
+                  "    pm.environment.set('initiatorId', jsonData.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"initiator@example.com\",\n    \"name\": \"Event Initiator\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/admin/users",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "1.3 Создать категорию",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Статус 201 Created', function() {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Проверка тела ответа', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('name');",
+                  "    pm.expect(jsonData.name).to.eql('Test Category');",
+                  "    pm.environment.set('categoryId', jsonData.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Test Category\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/admin/categories",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "categories"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Создание события",
+      "item": [
+        {
+          "name": "2.1 Создать событие пользователем (PENDING)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Статус 201 Created', function() {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Проверка статуса события', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('state');",
+                  "    pm.expect(jsonData.state).to.eql('PENDING');",
+                  "    pm.expect(jsonData).to.have.property('title');",
+                  "    pm.expect(jsonData.title).to.eql('Test Event for Moderation');",
+                  "    pm.environment.set('eventId', jsonData.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"annotation\": \"Test annotation for moderation event\",\n    \"category\": \"{{categoryId}}\",\n    \"description\": \"This is a test event description for moderation enhancement testing\",\n    \"eventDate\": \"2026-12-31 20:00:00\",\n    \"location\": {\n        \"lat\": 55.7558,\n        \"lon\": 37.6173\n    },\n    \"paid\": false,\n    \"participantLimit\": 10,\n    \"requestModeration\": true,\n    \"title\": \"Test Event for Moderation\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/users/{{initiatorId}}/events",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "users",
+                "{{initiatorId}}",
+                "events"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Тестирование модерации",
+      "item": [
+        {
+          "name": "3.1 Опубликовать событие (PUBLISH_EVENT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Статус 200 OK', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Проверка статуса события после публикации', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('state');",
+                  "    pm.expect(jsonData.state).to.eql('PUBLISHED');",
+                  "    pm.expect(jsonData).to.have.property('publishedOn');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"action\": \"PUBLISH_EVENT\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/admin/events/{{eventId}}/moderate",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "events",
+                "{{eventId}}",
+                "moderate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3.2 Получить историю модерации",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Статус 200 OK', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Проверка истории модерации', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "    pm.expect(jsonData.length).to.be.at.least(1);",
+                  "    const log = jsonData[0];",
+                  "    pm.expect(log).to.have.property('action');",
+                  "    pm.expect(log.action).to.eql('PUBLISHED');",
+                  "    pm.expect(log).to.have.property('eventId');",
+                  "    pm.expect(log.eventId).to.eql(parseInt(pm.environment.get('eventId')));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/admin/events/{{eventId}}/history",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "events",
+                "{{eventId}}",
+                "history"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Тестирование отклонения события",
+      "item": [
+        {
+          "name": "4.1 Создать второе событие",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Статус 201 Created', function() {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Проверка создания события', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData.state).to.eql('PENDING');",
+                  "    pm.environment.set('eventId2', jsonData.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"annotation\": \"Second event for rejection test\",\n    \"category\": \"{{categoryId}}\",\n    \"description\": \"This event will be rejected with comment\",\n    \"eventDate\": \"2026-12-31 20:00:00\",\n    \"location\": {\n        \"lat\": 55.7558,\n        \"lon\": 37.6173\n    },\n    \"paid\": false,\n    \"participantLimit\": 5,\n    \"requestModeration\": true,\n    \"title\": \"Event for Rejection\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/users/{{initiatorId}}/events",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "users",
+                "{{initiatorId}}",
+                "events"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4.2 Отклонить событие с комментарием (REJECT_EVENT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Статус 200 OK', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Проверка статуса после отклонения', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('state');",
+                  "    pm.expect(jsonData.state).to.eql('CANCELED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"action\": \"REJECT_EVENT\",\n    \"comment\": \"Event rejected due to inappropriate content\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/admin/events/{{eventId2}}/moderate",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "events",
+                "{{eventId2}}",
+                "moderate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4.3 Проверить историю для отклоненного события",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Статус 200 OK', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Проверка истории модерации', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "    const log = jsonData[0];",
+                  "    pm.expect(log).to.have.property('action');",
+                  "    pm.expect(log.action).to.eql('REJECTED');",
+                  "    pm.expect(log).to.have.property('comment');",
+                  "    pm.expect(log.comment).to.eql('Event rejected due to inappropriate content');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/admin/events/{{eventId2}}/history",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "events",
+                "{{eventId2}}",
+                "history"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Тестирование отправки на доработку",
+      "item": [
+        {
+          "name": "5.1 Создать третье событие",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Статус 201 Created', function() {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Проверка создания события', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData.state).to.eql('PENDING');",
+                  "    pm.environment.set('eventId3', jsonData.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"annotation\": \"Third event for rework test\",\n    \"category\": \"{{categoryId}}\",\n    \"description\": \"This event will be sent to rework\",\n    \"eventDate\": \"2026-12-31 20:00:00\",\n    \"location\": {\n        \"lat\": 55.7558,\n        \"lon\": 37.6173\n    },\n    \"paid\": false,\n    \"participantLimit\": 5,\n    \"requestModeration\": true,\n    \"title\": \"Event for Rework\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/users/{{initiatorId}}/events",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "users",
+                "{{initiatorId}}",
+                "events"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5.2 Отправить на доработку (SEND_TO_REWORK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Статус 200 OK', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Проверка статуса после отправки на доработку', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('state');",
+                  "    pm.expect(jsonData.state).to.eql('CANCELED');",
+                  "    pm.expect(jsonData).to.have.property('moderationComment');",
+                  "    pm.expect(jsonData.moderationComment).to.eql('Please add more details about the event');",
+                  "    pm.expect(jsonData).to.have.property('reworkCount');",
+                  "    pm.expect(jsonData.reworkCount).to.eql(1);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"action\": \"SEND_TO_REWORK\",\n    \"comment\": \"Please add more details about the event\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/admin/events/{{eventId3}}/moderate",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "events",
+                "{{eventId3}}",
+                "moderate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5.3 Повторно отправить на модерацию (SEND_TO_REVIEW)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Статус 200 OK', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Проверка после повторной отправки', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('state');",
+                  "    pm.expect(jsonData.state).to.eql('PENDING');",
+                  "    // Комментарий модерации должен быть очищен",
+                  "    pm.expect(jsonData).to.have.property('moderationComment');",
+                  "    pm.expect(jsonData.moderationComment).to.be.null;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"stateAction\": \"SEND_TO_REVIEW\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/users/{{initiatorId}}/events/{{eventId3}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "users",
+                "{{initiatorId}}",
+                "events",
+                "{{eventId3}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5.4 Проверить историю с несколькими записями",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Статус 200 OK', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Проверка истории с несколькими записями', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "    pm.expect(jsonData.length).to.be.at.least(2);",
+                  "    ",
+                  "    // Проверяем, что есть SENT_TO_REWORK и RESUBMITTED",
+                  "    const actions = jsonData.map(log => log.action);",
+                  "    pm.expect(actions).to.include('SENT_TO_REWORK');",
+                  "    pm.expect(actions).to.include('RESUBMITTED');",
+                  "    ",
+                  "    // Проверяем порядок (сначала последнее действие)",
+                  "    pm.expect(jsonData[0].action).to.eql('RESUBMITTED');",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/admin/events/{{eventId3}}/history",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "events",
+                "{{eventId3}}",
+                "history"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "6. Тестирование ошибок",
+      "item": [
+        {
+          "name": "6.1 Попытка опубликовать уже опубликованное событие",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Статус 409 Conflict', function() {",
+                  "    pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test('Проверка сообщения об ошибке', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData.message).to.include('Событие можно опубликовать только из статуса PENDING');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"action\": \"PUBLISH_EVENT\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/admin/events/{{eventId}}/moderate",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "events",
+                "{{eventId}}",
+                "moderate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6.2 Отправка на доработку без комментария",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Статус 400 Bad Request', function() {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Проверка сообщения об ошибке', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData.message).to.include('Необходимо указать комментарий для доработки');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"action\": \"SEND_TO_REWORK\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/admin/events/{{eventId3}}/moderate",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "events",
+                "{{eventId3}}",
+                "moderate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6.3 Попытка получить историю несуществующего события",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Статус 404 Not Found', function() {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('Проверка сообщения об ошибке', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData.message).to.include('не найдено');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/admin/events/99999/history",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "events",
+                "99999",
+                "history"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6.4 Некорректное действие",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Статус 400 Bad Request', function() {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"action\": \"INVALID_ACTION\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/admin/events/{{eventId}}/moderate",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "events",
+                "{{eventId}}",
+                "moderate"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "7. Очистка данных",
+      "item": [
+        {
+          "name": "7.1 Удалить созданные события",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Статус 204 No Content', function() {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/admin/users/{{initiatorId}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "users",
+                "{{initiatorId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "initiatorId",
+      "value": ""
+    },
+    {
+      "key": "adminId",
+      "value": ""
+    },
+    {
+      "key": "categoryId",
+      "value": ""
+    },
+    {
+      "key": "eventId",
+      "value": ""
+    },
+    {
+      "key": "eventId2",
+      "value": ""
+    },
+    {
+      "key": "eventId3",
+      "value": ""
+    }
+  ]
+}

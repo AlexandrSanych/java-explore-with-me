@@ -1,12 +1,16 @@
 package ru.practicum.main.mapper;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import ru.practicum.main.dto.response.ParticipationRequestDto;
 import ru.practicum.main.model.Request;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class RequestMapper {
+
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
 
     public static ParticipationRequestDto toParticipationRequestDto(Request request) {
